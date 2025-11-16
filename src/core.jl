@@ -67,7 +67,9 @@ end
 @inline function _set_bit!(layers::Vector{Vector{T}}, lvl::Int, widx::Int, bitpos::Int) where T
     layers[lvl][widx] |= (one(T) << bitpos)
 end
-
+@inline function _disable_bit!(layers::Vector{Vector{T}}, lvl::Int, widx::Int, bitpos::Int) where T
+    layers[lvl][widx] &= ~(one(T) << bitpos)
+end
 # internal: get bit
 @inline function _get_bit(layers::Vector{Vector{T}}, lvl::Int, widx::Int, bitpos::Int) where T
     return (layers[lvl][widx] >> bitpos) & one(T)
@@ -84,7 +86,7 @@ function Base.push!(hb::HiBitSet, x::Integer)
 
     # propagate upwards: for each level, set the bit corresponding to word_idx
     cur_word = word_idx
-    for lvl in 2:length(hb.layers)
+    @inbounds for lvl in 2:length(hb.layers)
         parent_word = (cur_word - 1) ÷ WORD_BITS + 1
         parent_bit  = (cur_word - 1) % WORD_BITS
         _set_bit!(hb.layers, lvl, parent_word, parent_bit)
@@ -92,15 +94,46 @@ function Base.push!(hb::HiBitSet, x::Integer)
     end
     return hb
 end
+function Base.delete!(hb::HiBitSet, x::Integer)
+    @assert 0 <= x < hb.capacity "index out of bounds"
+    word_idx = x ÷ WORD_BITS + 1       # 1-based word index
+    bitpos = x % WORD_BITS
+
+    # if already present, still fine (idempotent)
+    _set_bit!(hb.layers, 1, word_idx, bitpos)
+
+    # propagate upwards: for each level, set the bit corresponding to word_idx
+    cur_word = word_idx
+    @inbounds for lvl in 2:length(hb.layers)
+        parent_word = (cur_word - 1) ÷ WORD_BITS + 1
+        parent_bit  = (cur_word - 1) % WORD_BITS
+        _disable_bit!(hb.layers, lvl, parent_word, parent_bit)
+        cur_word = parent_word
+    end
+    return hb
+end
 
 # check membership
-function Base.contains(hb::HiBitSet{T}, x::Integer) where T
+function Base.in(hb::HiBitSet{T}, x::Integer) where T
     0 <= x < hb.capacity || return false
     bits = _nbits(T)
     wi = x ÷ bits + 1
     bp = x % bits
     return @inbounds !iszero(_get_bit(hb.layers, 1, wi, bp))
 end
+function Base.in(hbA::HiBitSet, hbB::HiBitSet)
+    # intersect hbA & hbB et comparer chaque couche
+    @inbounds for lvl in 1:length(hbA.layers)
+        L = length(hbA.layers[lvl])
+        for i in 1:L
+	        if (hbA.layers[lvl][i] & hbB.layers[lvl][i]) != hbA.layers[lvl][i]
+	            return false
+	        end
+	    end
+    end
+    return true
+end
+
 
 # Efficient intersection that returns a vector of indices present in both sets
 # We scan top-down: find matching words at top, then descend to find matching bits.

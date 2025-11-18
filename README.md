@@ -3,11 +3,73 @@
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
-[Hierarchical Bitset](https://github.com/amethyst/hibitset) is a data structure formerly introduced in the ECS domain.
+[Hierarchical Bitset](https://github.com/amethyst/hibitset) HiBitSet is a hierarchical bitset inspired by the structure used in the ECS ecosystem, particularly in Amethyst’s hibitset.
+It implements a multi-layer bitset that accelerates set operations by skipping empty regions efficiently.
 
-It's a bitset with multiples layers which allows for fast sets operations.
 
-Here are some benchmarks:
+---
+
+## Why a Hierarchical Bitset?
+
+A classical bitset scans blocks linearly.
+A hierarchical bitset keeps summaries (“layers”) that tell you which blocks contain at least one bit set.
+
+### Structure (simplified):
+
+- Layer 0: raw bits
+
+- Layer 1: one bit per 64-bit chunk of Layer 0
+
+- Layer 2: one bit per 64-bit chunk of Layer 1
+
+… and so on
+
+
+This allows:
+
+- Fast intersection
+- Fast union
+- Fast filtering of sparse sets
+-Predictable performance even with large ranges
+
+---
+
+## Use case
+
+- ECS queries (matching components fast)
+
+- High-frequency set operations
+
+
+Not ideal for:
+
+- Iteration-heavy workloads
+
+- Frequent deep copies
+
+
+
+---
+
+## Basic Usage
+
+```julia
+using HiBitSet
+
+bs = HiBitSet([1,3,4])
+push!(bs, 42)
+push!(bs, 9000)
+
+if 42 in bs
+    println("found")
+end
+
+delete!(bs, 42)
+```
+
+---
+
+## Benchmarks
 
 ```
 --- Intersect ---

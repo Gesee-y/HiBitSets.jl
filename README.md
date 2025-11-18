@@ -1,5 +1,8 @@
 # HiBitSet.jl
 
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
+
 [Hierarchical Bitset](https://github.com/amethyst/hibitset) is a data structure formerly introduced in the ECS domain.
 
 It's a bitset with multiples layers which allows for fast sets operations.

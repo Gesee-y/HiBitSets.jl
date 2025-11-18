@@ -18,9 +18,9 @@ A hierarchical bitset keeps summaries (“layers”) that tell you which blocks 
 
 - Layer 0: raw bits
 
-- Layer 1: one bit per 64-bit chunk of Layer 0
+- Layer 1: one bit per n-bit chunk of Layer 0
 
-- Layer 2: one bit per 64-bit chunk of Layer 1
+- Layer 2: one bit per n-bit chunk of Layer 1
 
 … and so on
 
@@ -56,7 +56,7 @@ Not ideal for:
 ```julia
 using HiBitSet
 
-bs = HiBitSet([1,3,4])
+bs = HiBitSet([1,3,4], 10000)
 push!(bs, 42)
 push!(bs, 9000)
 

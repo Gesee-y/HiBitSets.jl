@@ -1,6 +1,5 @@
 using HiBitSets
 using Test
-using Coverage
 
 function hset(vals, cap)
     hb = HiBitSet(cap)
@@ -134,5 +133,3 @@ end
         @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
     end
 end
-
-LCOV.writefile("lcov.info", process_folder())

@@ -1,113 +1,138 @@
 include("..\\src\\HiBitSet.jl")
 
 using .HiBitSets
-using BenchmarkTools
+using Test
 
-A, B = rand(1:999, 100), rand(1:999, 100)
-
-# Example usage (uncomment to test):
-
-out = HiBitSets.HiBitSet(1000)
-hb = HiBitSets.HiBitSet(A,1000)
-#delete!(hb, 10); push!(hb, 12); push!(hb, 99)
-hb2 = HiBitSets.HiBitSet(B,1000)
-#push!(hb2, 12); push!(hb2, 50)
-println(HiBitSets.intersect_to_vector(hb, hb2))
-
-a,b = BitSet(A), BitSet(B)
-c = Set(A)
-d = Set(B)
-
-println(intersect!(a, b))
-println(intersect!(c, d))
-
-println("--- Intersect ---")
-print("HiBitSet:")
-@btime intersect!($hb,$hb2)
-print("Set:")
-@btime intersect!($c,$d)
-print("BitSet:")
-@btime intersect!($a,$b)
-
-println("--- Inclusion ---")
-print("HiBitSet:")
-@btime in($hb, 1)
-print("Set:")
-@btime in($c, 1)
-print("BitSet:")
-@btime in($a, 1)
-
-println("--- Pushing an element ---")
-print("HiBitSet:")
-@btime push!($hb, 1)
-print("Set:")
-@btime push!($c, 1)
-print("BitSet:")
-@btime push!($a, 1)
-
-println("--- Deleting an element ---")
-print("HiBitSet:")
-@btime delete!($hb, 1)
-print("Set:")
-@btime delete!($c, 1)
-print("BitSet:")
-@btime delete!($a, 1)
-
-println("--- Set Inclusion ---")
-print("HiBitSet:")
-@btime in($hb, $hb2)
-print("Set:")
-@btime in($c, $d)
-print("BitSet:")
-@btime in($a, $b)
-
-println("--- Set Union ---")
-print("HiBitSet:")
-@btime union!($hb, $hb2)
-print("Set:")
-@btime union!($c, $d)
-print("BitSet:")
-@btime union!($a, $b)
-
-println("--- Set Difference ---")
-print("HiBitSet:")
-@btime setdiff!($hb, $hb2)
-print("Set:")
-@btime setdiff!($c, $d)
-print("BitSet:")
-@btime setdiff!($a, $b)
-
-println("--- Set Cardinality ---")
-print("HiBitSet:")
-@btime length($hb)
-print("Set:")
-@btime length($c)
-print("BitSet:")
-@btime length($a)
-
-println("--- Set Copy ---")
-print("HiBitSet:")
-@btime copy($hb)
-print("Set:")
-@btime copy($c)
-print("BitSet:")
-@btime copy($a)
-
-s = 0
-println("--- Set Iteration ---")
-print("HiBitSet:")
-@btime @inbounds for e in $hb2
-	$s += e
+function hset(vals, cap)
+    hb = HiBitSet(cap)
+    push!.(Ref(hb), vals)
+    hb
 end
-print("Set:")
-@btime for e in $c
-	$s += e
-end
-print("BitSet:")
-@btime for e in $a
-	$s += e
-end
-s += 1
 
-#println(intersect!(a,b))
-#println(intersect!(c,d))
+@testset "HiBitSet – Construction" begin
+    hb = HiBitSet(1000)
+    @test isempty(hb)
+    @test length(hb) == 0
+end
+
+@testset "HiBitSet – Insert & Delete" begin
+    hb = HiBitSet(100)
+    push!(hb, 10)
+    push!(hb, 20)
+    @test 10 in hb
+    @test 20 in hb
+
+    delete!(hb, 10)
+    @test !(10 in hb)
+    @test 20 in hb
+end
+
+@testset "HiBitSet – Membership" begin
+    vals = [3, 7, 50, 99]
+    hb = HiBitSet(vals, 100)
+    for v in vals
+        @test v in hb
+    end
+    @test !(1 in hb)
+    @test !(98 in hb)
+end
+
+@testset "HiBitSet – Intersection" begin
+    A = [1, 3, 5, 7, 9]
+    B = [2, 3, 6, 7, 10]
+    hbA = HiBitSet(A, 100)
+    hbB = HiBitSet(B, 100)
+    inter = intersect_to_vector(hbA, hbB)
+    @test sort(inter) == [3,7]
+
+    # Coherence with Set
+    @test sort(inter) == sort(collect(intersect(Set(A), Set(B))))
+end
+
+@testset "HiBitSet – Union" begin
+    A = [1,4,6]
+    B = [2,4,8]
+    hbA = HiBitSet(A, 50)
+    hbB = HiBitSet(B, 50)
+    out = HiBitSet(50)
+
+    union!(out, hbA, hbB)
+    @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
+end
+
+@testset "HiBitSet – Difference" begin
+    A = [1,3,5,7]
+    B = [3,7]
+    hbA = HiBitSet(A, 50)
+    hbB = HiBitSet(B, 50)
+    out = HiBitSet(50)
+
+    setdiff!(out, hbA, hbB)
+    @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
+end
+
+@testset "HiBitSet – Inclusion" begin
+    A = [1,2,3]
+    B = [1,2,3,4,5]
+    hbA = HiBitSet(A, 100)
+    hbB = HiBitSet(B, 100)
+
+    @test issubset(hbA, hbB)
+    @test !issubset(hbB, hbA)
+end
+
+@testset "HiBitSet – Cardinality" begin
+    A = [1,5,7,20,30]
+    hb = HiBitSet(A, 100)
+    @test length(hb) == length(A)
+
+    empty = HiBitSet(500)
+    @test length(empty) == 0
+end
+
+@testset "HiBitSet – Iteration" begin
+    A = sort(unique(rand(1:100-1, 50)))
+    hb = HiBitSet(A, 100)
+    println(hb)
+    @test sort(collect(hb)) == A
+
+    empty = HiBitSet(1000)
+    @test collect(empty) == []
+end
+
+@testset "HiBitSet – Min/Max (if implemented)" begin
+    A = [10, 50, 3, 99, 42]
+    hb = HiBitSet(A, 200)
+
+    if hasmethod(minimum, Tuple{HiBitSet})
+        @test minimum(hb) == minimum(A)
+    end
+    
+    if hasmethod(maximum, Tuple{HiBitSet})
+        @test maximum(hb) == maximum(A)
+    end
+end
+
+@testset "HiBitSet – Stress & Randomized" begin
+    for _ in 1:200
+        cap = 1000
+        A = unique(rand(1:cap, rand(1:50)))
+        B = unique(rand(1:cap, rand(1:50)))
+
+        hbA = hset(A, cap)
+        hbB = hset(B, cap)
+        out = HiBitSet(cap)
+
+        # intersection
+        out_inter = intersect_to_vector(hbA, hbB)
+        @test sort(out_inter) == sort(collect(intersect(Set(A), Set(B))))
+
+        # union
+        union!(out, hbA, hbB)
+        @test sort(collect(out)) == sort(union(Set(A), Set(B)))
+
+        # difference
+        difference!(out, hbA, hbB)
+        @test sort(collect(out)) == sort(setdiff(Set(A), Set(B)))
+    end
+end

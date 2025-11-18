@@ -10,7 +10,7 @@ export HiBitSet, add!, contains, intersect_to_vector, intersect!
 const WORD = UInt64
 const WORD_BITS = 64
 
-mutable struct HiBitSet{T}
+mutable struct HiBitSet{T} <: AbstractHiBitSet{T}
     layers::Vector{Vector{T}}
     capacity::Int
     words_level1::Int

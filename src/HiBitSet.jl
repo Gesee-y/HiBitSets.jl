@@ -4,7 +4,7 @@
 
 module HiBitSets
 
-abstract type AbstractHiBitSet <: AbstractSet end
+abstract type AbstractHiBitSet{T} <: AbstractSet{T} end
 
 include("core.jl")
 include("operations.jl")

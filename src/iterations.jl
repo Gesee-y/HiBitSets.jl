@@ -20,3 +20,11 @@ Base.@propagate_inbounds function Base.iterate(hb::HiBitSet{T}, state=(0,1)) whe
     return ((bitset-1)*usize + bitpos+gap, (bitpos+gap+1, bitset))
 end
 
+function Base.collect(hb::HiBitSet)
+	res = Int[]
+	for e in hb
+		push!(res, e)
+	end
+
+	return res
+end

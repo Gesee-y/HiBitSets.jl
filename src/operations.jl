@@ -15,37 +15,38 @@ end
 end
 
 # add an index to the set
-function Base.push!(hb::HiBitSet, x::Integer)
+function Base.push!(hb::HiBitSet{T}, x::Integer) where T
     @assert 0 <= x < hb.capacity "index out of bounds"
-    word_idx = x ÷ WORD_BITS + 1       # 1-based word index
-    bitpos = x % WORD_BITS
+    usize = sizeof(T)*8
+    word_idx = x ÷ usize + 1       # 1-based word index
+    bitpos = x % usize
 
     # if already present, still fine (idempotent)
     _set_bit!(hb.layers, 1, word_idx, bitpos)
 
     # propagate upwards: for each level, set the bit corresponding to word_idx
     cur_word = word_idx
-    @inbounds for lvl in 2:length(hb.layers)
-        parent_word = (cur_word - 1) ÷ WORD_BITS + 1
-        parent_bit  = (cur_word - 1) % WORD_BITS
+    for lvl in 2:length(hb.layers)
+        parent_word = (cur_word - 1) ÷ usize + 1
+        parent_bit  = (cur_word - 1) % usize
         _set_bit!(hb.layers, lvl, parent_word, parent_bit)
         cur_word = parent_word
     end
     return hb
 end
-function Base.delete!(hb::HiBitSet, x::Integer)
+function Base.delete!(hb::HiBitSet{T}, x::Integer) where T
     @assert 0 <= x < hb.capacity "index out of bounds"
-    word_idx = x ÷ WORD_BITS + 1       # 1-based word index
-    bitpos = x % WORD_BITS
+    usize = sizeof(T)*8
+    word_idx = x ÷ usize + 1       # 1-based word index
+    bitpos = x % usize
 
-    # if already present, still fine (idempotent)
-    _set_bit!(hb.layers, 1, word_idx, bitpos)
+    _disable_bit!(hb.layers, 1, word_idx, bitpos)
 
     # propagate upwards: for each level, set the bit corresponding to word_idx
     cur_word = word_idx
     @inbounds for lvl in 2:length(hb.layers)
-        parent_word = (cur_word - 1) ÷ WORD_BITS + 1
-        parent_bit  = (cur_word - 1) % WORD_BITS
+        parent_word = (cur_word - 1) ÷ usize + 1
+        parent_bit  = (cur_word - 1) % usize
         _disable_bit!(hb.layers, lvl, parent_word, parent_bit)
         cur_word = parent_word
     end
@@ -53,9 +54,12 @@ function Base.delete!(hb::HiBitSet, x::Integer)
 end
 
 # check membership
-function Base.in(hb::HiBitSet{T}, x::Integer) where T
+function Base.in(x::Integer, hb::HiBitSet{T}) where T
     0 <= x < hb.capacity || return false
-    return @inbounds !iszero(hb.layers[begin][x])
+    usize = sizeof(T)*8
+    word_idx = x ÷ usize + 1
+    bitpos = x % usize
+    return !iszero(_get_bit(hb.layers, 1, word_idx, bitpos))
 end
 function Base.in(hbA::HiBitSet, hbB::HiBitSet)
     # intersect hbA & hbB et comparer chaque couche
@@ -69,14 +73,39 @@ function Base.in(hbA::HiBitSet, hbB::HiBitSet)
     end
     return true
 end
+Base.issubset(hbA::HiBitSet, hbB::HiBitSet) = (hbA in hbB)
 
+function Base.length(hb::HiBitSet{T}) where T
+    layer = hb.layers[begin]
+    res = 0
 
-function Base.length(hb::HiBitSet)
-    @inbounds v = maximum(hb.layers[begin])
-    length(hb.layers) > 1 || return v
-    @inbounds v += hb.layers[begin+1][begin] & 1
+    @inbounds for bits in layer
+        res += count_ones(bits)
+    end
 
-    return v
+    return res
+end 
+
+function Base.maximum(hb::HiBitSet{T}) where T
+    layer = hb.layers[begin]
+    usize = sizeof(T)*8
+    L = length(layer)
+
+    @inbounds for i in L:-1:1
+        bits = layer[i]
+        iszero(bits) && continue
+
+        bpos = 1
+        while !iszero(bits)
+            npos = trailing_zeros(bits)
+            bits >>= bpos + npos
+            bpos += npos
+        end
+
+        return (i-1)*usize + bpos
+    end
+
+    return 0
 end 
 
 # Efficient intersection that returns a vector of indices present in both sets
@@ -244,13 +273,7 @@ function empty_like(hb::HiBitSet)
     layers = [zeros(WORD, length(l)) for l in hb.layers]
     return HiBitSet(layers, hb.capacity, hb.words_level1)
 end
-
-# iteration over set elements (ascending)
-Base.iterate(hb::HiBitSet, state=nothing) = iterate(_iter_helper(hb), state)
-function _iter_helper(hb::HiBitSet)
-    vec = intersect_to_vector(hb, hb)  # trivial but leverages implementation
-    return Iterators.Stateful(vec)
-end
+Base.isempty(hb::HiBitSet) = all(iszero, hb.layers[1])
 
 _nbits(::Type{T}) where T= sizeof(T)*8
 _nbits(n) = _nbits(typeof(n))

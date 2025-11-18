@@ -179,7 +179,6 @@ function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
 end
 
 # An in-place intersection that returns a new HiBitSet (hb_out = hb1 ∩ hb2)
-Base.intersect!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T = intersect!(HiBitSet{T}(hb1.capacity), hb1, hb2)
 function Base.intersect!(hb_out::HiBitSet{T}, hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
     @assert hb_out.capacity == hb1.capacity == hb2.capacity "capacities must match"
     @assert length(hb_out.layers) == length(hb1.layers) == length(hb2.layers) "layer counts must match"
@@ -205,7 +204,6 @@ function Base.intersect!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
 end
 
 # An in-place intersection that returns a new HiBitSet (hb_out = hb1 ∩ hb2)
-Base.setdiff!(hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T = setdiff!(HiBitSet{T}(hb1.capacity), hb1, hbs...)
 function Base.setdiff!(hb_out::HiBitSet{T}, hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T
     @assert hb_out.capacity == hb1.capacity "capacities must match"
     @assert length(hb_out.layers) == length(hb1.layers) "layer counts must match"
@@ -238,8 +236,6 @@ function Base.setdiff!(hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T
     return hb1
 end
 
-
-Base.union!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T = union!(HiBitSet{T}(hb1.capacity), hb1, hb2)
 function Base.union!(hb_out::HiBitSet{T}, hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
     @assert hb_out.capacity == hb1.capacity == hb2.capacity "capacities must match"
     @assert length(hb_out.layers) == length(hb1.layers) == length(hb2.layers) "layer counts must match"

@@ -21,7 +21,7 @@ jobs:
           julia --project -e 'using Pkg;
             Pkg.activate(".");
             Pkg.add("Coverage");
-            Pkg.add("https://github.com/Gesee-y/HiBitSets.jl")
+            #Pkg.add("https://github.com/Gesee-y/HiBitSets.jl")
             Pkg.instantiate();
             using Test, Coverage;
             Pkg.test(coverage=true);

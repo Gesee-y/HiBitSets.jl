@@ -18,6 +18,9 @@ a,b = BitSet(A), BitSet(B)
 c = Set(A)
 d = Set(B)
 
+println(intersect!(a, b))
+println(intersect!(c, d))
+#=
 println("--- Intersect ---")
 print("HiBitSet:")
 @btime intersect!($hb,$hb2)
@@ -66,6 +69,45 @@ print("Set:")
 print("BitSet:")
 @btime union!($a, $b)
 
+println("--- Set Difference ---")
+print("HiBitSet:")
+@btime setdiff!($hb, $hb2)
+print("Set:")
+@btime setdiff!($c, $d)
+print("BitSet:")
+@btime setdiff!($a, $b)
+
+println("--- Set Cardinality ---")
+print("HiBitSet:")
+@btime length($hb)
+print("Set:")
+@btime length($c)
+print("BitSet:")
+@btime length($a)
+
+println("--- Set Copy ---")
+print("HiBitSet:")
+@btime copy($hb)
+print("Set:")
+@btime copy($c)
+print("BitSet:")
+@btime copy($a)
+=#
+s = 0
+println("--- Set Iteration ---")
+print("HiBitSet:")
+@btime @inbounds for e in $hb2
+	$s += e
+end
+print("Set:")
+@btime for e in $c
+	$s += e
+end
+print("BitSet:")
+@btime for e in $a
+	$s += e
+end
+s += 1
 
 #println(intersect!(a,b))
 #println(intersect!(c,d))

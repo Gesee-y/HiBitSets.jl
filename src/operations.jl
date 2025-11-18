@@ -71,6 +71,14 @@ function Base.in(hbA::HiBitSet, hbB::HiBitSet)
 end
 
 
+function Base.length(hb::HiBitSet)
+    @inbounds v = maximum(hb.layers[begin])
+    length(hb.layers) > 1 || return v
+    @inbounds v += hb.layers[begin+1][begin] & 1
+
+    return v
+end 
+
 # Efficient intersection that returns a vector of indices present in both sets
 # We scan top-down: find matching words at top, then descend to find matching bits.
 function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
@@ -126,7 +134,6 @@ function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
         end
     end
 
-    #sort!(result)
     return result
 end
 
@@ -156,6 +163,40 @@ function Base.intersect!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
     return hb1
 end
 
+# An in-place intersection that returns a new HiBitSet (hb_out = hb1 ∩ hb2)
+Base.setdiff!(hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T = setdiff!(HiBitSet{T}(hb1.capacity), hb1, hbs...)
+function Base.setdiff!(hb_out::HiBitSet{T}, hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T
+    @assert hb_out.capacity == hb1.capacity "capacities must match"
+    @assert length(hb_out.layers) == length(hb1.layers) "layer counts must match"
+    @inbounds for lvl in 1:length(hb_out.layers)
+        L = length(hb_out.layers[lvl])
+        for i in 1:L
+            a = hb1.layers[lvl][i]
+            for hb in hbs
+                a &= ~hb.layers[lvl][i]
+            end
+
+            hb_out.layers[lvl][i] = a
+        end
+    end
+    return hb_out
+end
+Base.setdiff(hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T = setdiff!(HiBitSet{T}(hb1.capacity), hb1, hbs...)
+function Base.setdiff!(hb1::HiBitSet{T}, hbs::HiBitSet{T}...) where T
+    @inbounds for lvl in 1:length(hb2.layers)
+        L = length(hb2.layers[lvl])
+        for i in 1:L
+            a = hb1.layers[lvl][i]
+            for hb in hbs
+                a &= ~hb.layers[lvl][i]
+            end
+
+            hb1.layers[lvl][i] = a
+        end
+    end
+    return hb1
+end
+
 
 Base.union!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T = union!(HiBitSet{T}(hb1.capacity), hb1, hb2)
 function Base.union!(hb_out::HiBitSet{T}, hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
@@ -180,6 +221,22 @@ function Base.union!(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
         end
     end
     return hb1
+end
+
+function Base.empty!(hb::HiBitSet)
+    @inbounds for layer in hb.layers
+        layer .= 0
+    end
+end
+
+function Base.copy(hb::HiBitSet{T}) where T
+    nhb = HiBitSet{T}(hb.capacity)
+    nhb.layers = deepcopy(hb.layers)
+end
+
+function Base.copy!(hb1::HiBitSet, hb2::HiBitSet)
+    @assert hb1.capacity == hb2.capacity "capacities must match"
+    hb1.layers = deepcopy(hb2.layers)
 end
 
 # convenience: build empty HiBitSet with same structure

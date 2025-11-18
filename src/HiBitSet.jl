@@ -8,5 +8,6 @@ abstract type AbstractHiBitSet end
 
 include("core.jl")
 include("operations.jl")
+include("iterations.jl")
 
 end # module

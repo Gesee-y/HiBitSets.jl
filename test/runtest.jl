@@ -20,7 +20,7 @@ d = Set(B)
 
 println(intersect!(a, b))
 println(intersect!(c, d))
-#=
+
 println("--- Intersect ---")
 print("HiBitSet:")
 @btime intersect!($hb,$hb2)
@@ -92,7 +92,7 @@ print("Set:")
 @btime copy($c)
 print("BitSet:")
 @btime copy($a)
-=#
+
 s = 0
 println("--- Set Iteration ---")
 print("HiBitSet:")

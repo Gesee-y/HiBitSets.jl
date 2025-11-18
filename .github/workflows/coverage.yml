@@ -21,6 +21,7 @@ jobs:
           julia --project -e 'using Pkg;
             Pkg.activate(".");
             Pkg.add("Coverage");
+            Pkg.add("Test");
             Pkg.instantiate();
             using Test, Coverage;
             Pkg.test(coverage=true);

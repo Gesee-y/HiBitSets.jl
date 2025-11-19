@@ -1,12 +1,6 @@
 using HiBitSets
 using Test
 
-function hset(vals, cap)
-    hb = HiBitSet(cap)
-    push!.(Ref(hb), vals)
-    hb
-end
-
 @testset "HiBitSet – Construction" begin
     hb = HiBitSet(1000)
     @test isempty(hb)
@@ -40,11 +34,21 @@ end
     B = [2, 3, 6, 7, 10]
     hbA = HiBitSet(A, 100)
     hbB = HiBitSet(B, 100)
+    out = HiBitSet(100)
     inter = intersect_to_vector(hbA, hbB)
     @test sort(inter) == [3,7]
 
     # Coherence with Set
     @test sort(inter) == sort(collect(intersect(Set(A), Set(B))))
+
+    intersect!(out, hbA, hbB)
+    @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
+
+    u = intersect(hbA, hbB)
+    @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
+
+    intersect!(hbA, hbB)
+    @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
 end
 
 @testset "HiBitSet – Union" begin
@@ -56,6 +60,12 @@ end
 
     union!(out, hbA, hbB)
     @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
+
+    u = union(hbA, hbB)
+    @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
+
+    union!(hbA, hbB)
+    @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
 end
 
 @testset "HiBitSet – Difference" begin
@@ -66,6 +76,12 @@ end
     out = HiBitSet(50)
 
     setdiff!(out, hbA, hbB)
+    @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
+
+    u = setdiff(hbA, hbB)
+    @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
+
+    setdiff!(hbA, hbB)
     @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
 end
 

@@ -154,6 +154,7 @@ function Base.minimum(hb::HiBitSet{T}) where T
     usize = sizeof(T)*8
     L = length(layer)
 
+    # We just get the first non zero bitset then we get the position of his lastest active bit
     @inbounds for i in 1:L
         bits = layer[i]
         iszero(bits) && continue
@@ -169,7 +170,7 @@ end
 # Efficient intersection that returns a vector of indices present in both sets
 # We scan top-down: find matching words at top, then descend to find matching bits.
 """
-Compute tge intersection of 2 HiBitSets and returns the result as a vector.
+Compute the intersection of 2 HiBitSets and returns the result as a vector.
 """
 function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
     @assert hb1.capacity == hb2.capacity "capacities must match"
@@ -179,7 +180,6 @@ function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
     # stack entries: (level, word_index_in_level, mask)
     # We'll start from top level where we look at word positions that match
     # For top level, iterate all words (usually 1)
-    
 
     stack = Frame{T}[]
     # initialize with top-level matches

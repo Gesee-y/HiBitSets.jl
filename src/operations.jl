@@ -203,7 +203,6 @@ function intersect_to_vector(hb1::HiBitSet{T}, hb2::HiBitSet{T}) where T
             tz = trailing_zeros(mask)
             push!(result, base + tz)
             mask &= mask - 1  # clear lowest set bit
-            end
         else
             # descend: each bit set in mask corresponds to a word index in the lower level
             # For each set bit at position b, the child word index is (widx-1)*usize + b + 1

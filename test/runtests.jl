@@ -45,7 +45,7 @@ end
     @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
 
     u = intersect(hbA, hbB)
-    @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
+    @test sort(collect(u)) == sort(collect(intersect(Set(A), Set(B))))
 
     intersect!(hbA, hbB)
     @test sort(collect(out)) == sort(collect(intersect(Set(A), Set(B))))
@@ -62,7 +62,7 @@ end
     @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
 
     u = union(hbA, hbB)
-    @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
+    @test sort(collect(u)) == sort(collect(union(Set(A), Set(B))))
 
     union!(hbA, hbB)
     @test sort(collect(out)) == sort(collect(union(Set(A), Set(B))))
@@ -79,7 +79,7 @@ end
     @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
 
     u = setdiff(hbA, hbB)
-    @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))
+    @test sort(collect(u)) == sort(collect(setdiff(Set(A), Set(B))))
 
     setdiff!(hbA, hbB)
     @test sort(collect(out)) == sort(collect(setdiff(Set(A), Set(B))))

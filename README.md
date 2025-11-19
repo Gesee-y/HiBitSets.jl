@@ -54,7 +54,7 @@ Not ideal for:
 ## Basic Usage
 
 ```julia
-using HiBitSet
+using HiBitSets
 
 bs = HiBitSet([1,3,4], 10000)
 push!(bs, 42)

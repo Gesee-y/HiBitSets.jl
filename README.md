@@ -1,5 +1,6 @@
 # HiBitSet.jl
 
+[![Test workflow status](https://github.com/Gesee-y/HiBitSets.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/Gesee-y/HiBitSets.jl/actions/workflows/coverage.yml?query=branch%3Amain)
 [![Coverage Status](https://coveralls.io/repos/github/Gesee-y/HiBitSets.jl/badge.svg)](https://coveralls.io/github/Gesee-y/HiBitSets.jl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
